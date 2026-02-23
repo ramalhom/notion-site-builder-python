@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  frontend-dev:
+    container_name: notion-site-builder-dev
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
+      - VITE_SUPABASE_PROJECT_ID=${VITE_SUPABASE_PROJECT_ID}
+      - NODE_ENV=development
+    restart: unless-stopped
+    networks:
+      - notion-network
+    stdin_open: true
+    tty: true
+
+networks:
+  notion-network:
+    driver: bridge
