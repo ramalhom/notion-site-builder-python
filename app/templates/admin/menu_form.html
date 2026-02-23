@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Ajouter un élément - Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-8 max-w-2xl px-4">
+    <div class="mb-8">
+        <a href="/admin" class="text-sm text-muted-foreground hover:text-foreground mb-4 inline-block">← Retour au
+            dashboard</a>
+        <h1 class="text-3xl font-bold">{{ 'Modifier' if item else 'Ajouter' }} un élément</h1>
+    </div>
+
+    <form action="{{ '/admin/menu/edit/' ~ item.id if item else '/admin/menu/add' }}" method="post"
+        class="space-y-6 bg-card border rounded-lg p-6 shadow-sm">
+        <div class="space-y-2">
+            <label for="label" class="text-sm font-medium">Libellé *</label>
+            <input type="text" id="label" name="label" required placeholder="Accueil"
+                value="{{ item.label if item else '' }}"
+                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-2">
+                <label for="level" class="text-sm font-medium">Niveau</label>
+                <select id="level" name="level"
+                    class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="1" {{ 'selected' if item and item.level==1 }}>Niveau 1 (Principal)</option>
+                    <option value="2" {{ 'selected' if item and item.level==2 }}>Niveau 2 (Sous-menu)</option>
+                </select>
+            </div>
+            <div class="space-y-2">
+                <label for="parent_id" class="text-sm font-medium">Parent</label>
+                <select id="parent_id" name="parent_id"
+                    class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="None">Aucun</option>
+                    {% for p in menu_items %}
+                    <option value="{{ p.id }}" {{ 'selected' if item and item.parent_id==p.id }}>{{ p.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="space-y-2">
+            <label for="notion_url" class="text-sm font-medium">URL Notion publiée</label>
+            <input type="url" id="notion_url" name="notion_url" placeholder="https://votre-page.notion.site/..."
+                value="{{ item.notion_url if item else '' }}"
+                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+        </div>
+
+        <div class="space-y-2">
+            <label for="slug" class="text-sm font-medium">Slug (optionnel)</label>
+            <input type="text" id="slug" name="slug" placeholder="/ma-page" value="{{ item.slug if item else '' }}"
+                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+        </div>
+
+        <div class="flex items-center gap-2">
+            <input type="checkbox" id="is_active" name="is_active" value="True" {{ 'checked' if not item or
+                item.is_active }} class="rounded border-input text-primary">
+            <label for="is_active" class="text-sm font-medium">Actif</label>
+        </div>
+
+        <div class="pt-4 flex gap-4">
+            <button type="submit"
+                class="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium">
+                Enregistrer
+            </button>
+            <a href="/admin" class="flex-1">
+                <button type="button"
+                    class="w-full border border-input bg-background hover:bg-accent h-10 px-4 py-2 rounded-md">
+                    Annuler
+                </button>
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

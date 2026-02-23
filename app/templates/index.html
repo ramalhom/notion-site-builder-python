@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="w-full overflow-hidden" style="height: calc(100vh - 4rem);">
+    {% if home_page and home_page.notion_url %}
+    <iframe src="{{ home_page.notion_url }}" title="{{ home_page.label }}" class="w-full border-0"
+        style="margin-top: -45px; height: calc(100vh - 4rem + 45px);" allowfullscreen></iframe>
+    {% else %}
+    <div class="flex items-center justify-center h-full text-muted-foreground">
+        <p>Aucun contenu configuré pour cette page.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

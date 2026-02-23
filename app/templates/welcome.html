@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 md:py-24">
+    <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+            Bienvenue sur {{ config.site_name if config else 'votre site' }}
+        </h1>
+        <p class="text-xl text-muted-foreground mb-8">
+            Un site simple et élégant alimenté par vos pages Notion.
+        </p>
+
+        <div class="flex flex-wrap gap-4 justify-center mb-12">
+            <a href="/admin">
+                <button
+                    class="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-md font-medium transition-colors flex items-center gap-2">
+                    Administration
+                </button>
+            </a>
+        </div>
+
+        <div class="max-w-md mx-auto bg-card border rounded-lg p-6 shadow-sm">
+            <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 justify-center">
+                Premiers pas
+            </h2>
+            <div class="text-left space-y-3 text-sm text-muted-foreground">
+                <p>
+                    1. <strong>Publiez</strong> vos pages Notion en cliquant sur
+                    "Partager" → "Publier sur le web".
+                </p>
+                <p>
+                    2. <strong>Copiez</strong> l'URL de la page publiée.
+                </p>
+                <p>
+                    3. <strong>Connectez-vous</strong> à l'administration et ajoutez vos
+                    éléments de menu.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration - Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-8 max-w-2xl px-4">
+    <div class="mb-8">
+        <a href="/admin" class="text-sm text-muted-foreground hover:text-foreground mb-4 inline-block">← Retour au
+            dashboard</a>
+        <h1 class="text-3xl font-bold">Configuration du site</h1>
+        <p class="text-muted-foreground">Personnalisez l'identité de votre site.</p>
+    </div>
+
+    <form action="/admin/config" method="post" class="space-y-6 bg-card border rounded-lg p-6 shadow-sm">
+        <div class="space-y-2">
+            <label for="site_name" class="text-sm font-medium">Nom du site</label>
+            <input type="text" id="site_name" name="site_name" value="{{ config.site_name if config else '' }}" required
+                class="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+        </div>
+
+        <div class="space-y-2">
+            <label for="logo_type" class="text-sm font-medium">Type de logo</label>
+            <select id="logo_type" name="logo_type"
+                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <option value="none" {{ 'selected' if config and config.logo_type=='none' }}>Aucun</option>
+                <option value="emoji" {{ 'selected' if config and config.logo_type=='emoji' }}>Émoji</option>
+                <option value="image" {{ 'selected' if config and config.logo_type=='image' }}>Image URL</option>
+            </select>
+        </div>
+
+        <div id="emoji_section" class="space-y-2 {{ 'hidden' if config and config.logo_type != 'emoji' }}">
+            <label for="logo_emoji" class="text-sm font-medium">Émoji du logo</label>
+            <div class="flex flex-col gap-2">
+                <input type="text" id="logo_emoji" name="logo_emoji" value="{{ config.logo_emoji if config else '' }}"
+                    placeholder="🏠" class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <div class="flex gap-2 flex-wrap bg-muted/30 p-2 rounded-md border border-dashed">
+                    {% for emoji in ['🏠', '📚', '📝', '⚙️', '📊', '💡', '🎯', '📁', '📌', '🚀', '🎨', '✨'] %}
+                    <button type="button" onclick="document.getElementById('logo_emoji').value = '{{ emoji }}'"
+                        class="p-2 hover:bg-background rounded-md border border-transparent hover:border-input transition-all text-lg leading-none"
+                        title="Sélectionner {{ emoji }}">
+                        {{ emoji }}
+                    </button>
+                    {% endfor %}
+                </div>
+                <p class="text-[10px] text-muted-foreground italic">Cliquez sur un émoji pour le sélectionner
+                    rapidement.</p>
+            </div>
+        </div>
+
+        <div id="image_section" class="space-y-2 {{ 'hidden' if config and config.logo_type != 'image' }}">
+            <label for="logo_image_url" class="text-sm font-medium">URL de l'image du logo</label>
+            <input type="url" id="logo_image_url" name="logo_image_url"
+                value="{{ config.logo_image_url if config else '' }}" placeholder="https://..."
+                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+        </div>
+
+        <div class="pt-4">
+            <button type="submit"
+                class="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium transition-colors">
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const logoTypeSelect = document.getElementById('logo_type');
+        const emojiSection = document.getElementById('emoji_section');
+        const imageSection = document.getElementById('image_section');
+        const logoImageUrlInput = document.getElementById('logo_image_url');
+        const logoEmojiInput = document.getElementById('logo_emoji');
+
+        function toggleSections() {
+            const type = logoTypeSelect.value;
+
+            if (type === 'emoji') {
+                emojiSection.classList.remove('hidden');
+                imageSection.classList.add('hidden');
+                logoImageUrlInput.disabled = true;
+                logoEmojiInput.disabled = false;
+            } else if (type === 'image') {
+                emojiSection.classList.add('hidden');
+                imageSection.classList.remove('hidden');
+                logoImageUrlInput.disabled = false;
+                logoEmojiInput.disabled = true;
+            } else {
+                emojiSection.classList.add('hidden');
+                imageSection.classList.add('hidden');
+                logoImageUrlInput.disabled = true;
+                logoEmojiInput.disabled = true;
+            }
+        }
+
+        logoTypeSelect.addEventListener('change', toggleSections);
+        toggleSections(); // Run once on load
+    });
+</script>
+{% endblock %}

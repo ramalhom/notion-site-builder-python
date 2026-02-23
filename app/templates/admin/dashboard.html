@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Administration - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold">Gestion du menu</h1>
+            <p class="text-muted-foreground">Gérez les pages et la structure de votre site.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="/admin/config">
+                <button
+                    class="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md transition-colors flex items-center gap-2">
+                    Configuration
+                </button>
+            </a>
+            <a href="/admin/menu/add">
+                <button
+                    class="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md transition-colors flex items-center gap-2 font-medium">
+                    Ajouter un élément
+                </button>
+            </a>
+        </div>
+    </div>
+
+    {% if not menu_items %}
+    <div class="text-center py-20 border-2 border-dashed rounded-lg">
+        <p class="text-muted-foreground mb-4">Aucun élément de menu n'a encore été créé.</p>
+        <a href="/admin/menu/add">
+            <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md">Créer le premier
+                élément</button>
+        </a>
+    </div>
+    {% else %}
+    <div class="bg-card border rounded-lg overflow-hidden shadow-sm">
+        <table class="w-full text-sm">
+            <thead class="bg-muted/50 border-b">
+                <tr>
+                    <th class="text-left py-3 px-4 font-medium">Libellé</th>
+                    <th class="text-left py-3 px-4 font-medium">Slug</th>
+                    <th class="text-left py-3 px-4 font-medium">Actif</th>
+                    <th class="text-right py-3 px-4 font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for item in menu_items %}
+                <tr class="hover:bg-muted/30 transition-colors">
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-2">
+                            {% if item.level == 2 %}<span class="text-muted-foreground">↳</span>{% endif %}
+                            {% if item.emoji %}<span>{{ item.emoji }}</span>{% endif %}
+                            <span class="font-medium">{{ item.label }}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-muted-foreground">{{ item.slug or '-' }}</td>
+                    <td class="py-3 px-4">
+                        <span
+                            class="px-2 py-1 rounded-full text-[10px] uppercase font-bold {{ 'bg-green-100 text-green-700' if item.is_active else 'bg-red-100 text-red-700' }}">
+                            {{ 'Oui' if item.is_active else 'Non' }}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="flex justify-end gap-2 text-xs">
+                            <a href="/admin/menu/edit/{{ item.id }}" class="text-blue-600 hover:underline">Modifier</a>
+                            <a href="/admin/menu/delete/{{ item.id }}" class="text-red-600 hover:underline"
+                                onclick="return confirm('Supprimer cet élément ?')">Supprimer</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

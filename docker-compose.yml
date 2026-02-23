@@ -1,28 +1,16 @@
-version: '3.8'
-
 services:
-  frontend:
-    container_name: notion-site-builder-frontend
+  app:
+    container_name: notion-site-builder-app
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
-        VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID}
     ports:
-      - "3000:80"
+      - "8000:80"
     environment:
-      - NODE_ENV=production
+      - DATABASE_URL=sqlite:///./database.db
     restart: unless-stopped
     networks:
       - notion-network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
 networks:
   notion-network:
