@@ -213,7 +213,8 @@ Virtuozzo (anciennement Jelastic) permet de déployer via Docker ou directement 
 1. **Créer l'environnement** :
    - Cliquez sur **Nouveau Environnement**.
    - Allez dans l'onglet **Docker**.
-   - Cliquez sur **Sélectionner une image** et cherchez `votre-username/notion-site-builder:latest` (ou utilisez une image publique).
+   - Cliquez sur **Sélectionner une image** et cherchez `docker.io/votre-username/notion-site-builder:latest`.
+   - **Important** : Assurez-vous que l'image est bien au format `amd64` (voir section Dépannage).
 2. **Configurer les variables d'environnement** :
    - Dans les paramètres du nœud Docker, allez dans **Variables d'environnement**.
    - Ajoutez :
@@ -223,7 +224,7 @@ Virtuozzo (anciennement Jelastic) permet de déployer via Docker ou directement 
 3. **Port** : L'application écoute sur le port `80`. Virtuozzo gère automatiquement le routing.
 4. **CMD / Entry Point** (si demandé) :
    - **Point d'entrée** : (Laissez vide)
-   - **Exécuter la commande** : `python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`
+   - **Exécuter la commande** : `/opt/jelastic-python311/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`
 
 #### Option B : Déploiement via Git
 
@@ -239,7 +240,7 @@ Virtuozzo (anciennement Jelastic) permet de déployer via Docker ou directement 
    - Jelastic utilisera le `requirements.txt` pour installer les dépendances.
    - Configurez les variables d'environnement dans les paramètres du nœud.
    - **Point d'entrée** : (Laissez vide)
-   - **Exécuter la commande** : `python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`
+   - **Exécuter la commande** : `/opt/jelastic-python311/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`
 
 ---
 
@@ -311,39 +312,28 @@ docker inspect notion-app
 
 ## 🔐 Sécurité en production
 
-### 1. Utiliser HTTPS avec Let's Encrypt
+### 3. Utiliser Docker Compose pour la Production (SSL Automatique)
 
-Utilisez un reverse proxy comme Nginx ou Traefik :
+Pour un déploiement avec SSL automatique via Traefik et Let's Encrypt, utilisez le fichier dédié :
 
-```yaml
-# docker-compose.yml avec Traefik
-version: '3.8'
+```bash
+# 1. Créez un fichier .env.prod avec vos variables :
+# DOMAIN=votre-domaine.com
+# ACME_EMAIL=votre@email.com
+# VITE_SUPABASE_URL=...
+# VITE_SUPABASE_PUBLISHABLE_KEY=...
+# VITE_SUPABASE_PROJECT_ID=...
 
-services:
-  traefik:
-    image: traefik:v2.10
-    command:
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.email=votre@email.com"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./letsencrypt:/letsencrypt
-
-  app:
-    image: votre-username/notion-site-builder:latest
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.app.rule=Host(`votre-domaine.com`)"
-      - "traefik.http.routers.app.entrypoints=websecure"
-      - "traefik.http.routers.app.tls.certresolver=letsencrypt"
+# 2. Lancez la stack
+docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
 ```
+
+Ce fichier va :
+- Lancer **Traefik** comme reverse proxy.
+- Gérer automatiquement le certificat **SSL Let's Encrypt**.
+- Rediriger le trafic HTTP vers HTTPS.
+
+---
 
 ### 2. Limiter les ressources
 
@@ -375,7 +365,28 @@ docker images notion-site-builder
 docker history notion-site-builder:latest
 ```
 
----
+3. **Plateforme / Architecture** : Si vous construisez l'image sur un Mac (ARM/M1/M2), l'image sera incompatible avec Jelastic (AMD64). Cela peut se traduire par une erreur "image introuvable" ou un crash immédiat.
+   - Utilisez le script de build pour AMD64 : `./build-amd64.sh`
+4. **URL complète** : Essayez d'utiliser le nom complet du registre : `docker.io/votre-username/notion-site-builder:latest`.
+6. **Docker Engine (Alternative recommandée)** : Si l'image refuse toujours de se déployer en tant que "Conteneur Personnalisé" (erreur de modèle d'OS), utilisez un nœud **Docker Engine** :
+   - Dans le Marketplace Jelastic, installez **Docker Engine**.
+   - Cela crée une instance avec un vrai moteur Docker à l'intérieur.
+   - Connectez-vous en SSH à cette instance et lancez votre app normalement :
+     ```bash
+     docker run -d -p 80:80 \
+       -e VITE_SUPABASE_URL="..." \
+       -e VITE_SUPABASE_PUBLISHABLE_KEY="..." \
+       -e VITE_SUPABASE_PROJECT_ID="..." \
+       --name notion-app docker.io/votre-username/notion-site-builder:latest
+     ```
+   - C'est la méthode la plus robuste car elle ne dépend pas de la virtualisation système de Jelastic.
+
+#### Build optimisé pour Jelastic (AMD64)
+J'ai ajouté un script pour faciliter la création d'images compatibles :
+```bash
+./build-amd64.sh ramalhom latest
+```
+Ce script utilise `docker buildx` pour garantir que l'image est générée pour l'architecture `linux/amd64` utilisée par Virtuozzo.
 
 ## ❓ Dépannage
 
@@ -408,8 +419,15 @@ docker inspect --format='{{.State.Health.Status}}' notion-app
 
 Si vous obtenez cette erreur dans les logs Jelastic lors du déploiement via Git :
 
-1. **Utilisez le module python** : Remplacez `uvicorn` par `python3 -m uvicorn` dans votre commande de démarrage. Cela garantit que le binaire est cherché dans le bon environnement Python.
-2. **Vérifiez l'installation** : Connectez-vous en SSH à votre instance et vérifiez si les dépendances sont installées :
+1. **Utilisez le chemin absolu de Python** : Sur Jelastic, `python3` peut pointer vers une version différente de celle où vos packages sont installés. Utilisez le chemin complet identifié dans votre traceback :
+   - Commande : `/opt/jelastic-python311/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`
+2. **Trouver le bon chemin** : Si l'erreur persiste, tapez cette commande en SSH pour trouver le chemin exact de votre binaire Python :
+   ```bash
+   which python3
+   # ou
+   find /opt/jelastic-python* -name python3
+   ```
+3. **Vérifiez l'installation** : Connectez-vous en SSH à votre instance et vérifiez si les dépendances sont installées :
    ```bash
    pip3 list | grep uvicorn
    ```
@@ -441,6 +459,52 @@ Les logs que vous regardez sont probablement les **logs système (syslog)** qui 
      ```
    - Si une dépendance manque ou s'il y a une erreur de syntaxe, elle s'affichera immédiatement ici.
 3. **Le port 80** : Sur un nœud natif Jelastic, le port 80 est souvent déjà pris par Apache. Si vous voulez utiliser Uvicorn, vous devrez peut-être utiliser un autre port interne (ex: 8080) ou passer sur un environnement **Docker** (Option A) qui est plus adapté pour FastAPI.
+
+---
+
+## 🧪 Guide de Tests Manuels
+
+### 1. Test Local (Docker)
+Avant de déployer, vérifiez que l'image fonctionne sur votre machine :
+
+```bash
+# Lancer le conteneur avec vos variables .env
+docker run -d \
+  -p 3000:80 \
+  --env-file .env \
+  --name notion-test \
+  ramalhom/notion-site-builder:latest
+
+# Vérifier si l'app répond
+curl http://localhost:3000
+
+# Voir les logs en direct pour détecter des erreurs
+docker logs -f notion-test
+```
+
+### 2. Test SSL / Production (Traefik)
+Si vous utilisez `docker-compose.prod.yml`, vérifiez que Traefik gère bien le SSL :
+
+```bash
+# Voir les logs de Traefik pour les certificats Let's Encrypt
+docker logs traefik
+
+# Vérifier la configuration des routes (si vous avez accès au port 8080 en SSH)
+curl http://localhost:8080/api/rawdata
+```
+
+### 3. Test sur Jelastic (SSH)
+Pour vérifier que l'environnement Jelastic est correct sans passer par l'interface :
+
+```bash
+# Vérifier la présence des fichiers
+ls -la /var/www/webroot/ROOT
+
+# Tester la connexion à Supabase depuis le conteneur
+docker exec -it notion-site-builder-app env | grep VITE_SUPABASE
+
+# Tester manuellement la commande de démarrage (voir section Dépannage)
+```
 
 ---
 

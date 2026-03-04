@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - notion-network
+
+  app:
+    image: ${DOCKER_IMAGE:-ramalhom/notion-site-builder:latest}
+    container_name: notion-site-builder-prod
+    environment:
+      - DATABASE_URL=sqlite:////app/data/database.db
+    volumes:
+      - ./database:/app/data
+    restart: unless-stopped
+    networks:
+      - notion-network
+
+networks:
+  notion-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

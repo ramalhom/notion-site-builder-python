@@ -47,16 +47,31 @@
                 class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
         </div>
 
-        <div class="space-y-2">
-            <label for="slug" class="text-sm font-medium">Slug (optionnel)</label>
-            <input type="text" id="slug" name="slug" placeholder="/ma-page" value="{{ item.slug if item else '' }}"
-                class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-2">
+                <label for="emoji" class="text-sm font-medium">Emoji (optionnel)</label>
+                <input type="text" id="emoji" name="emoji" placeholder="🏠" value="{{ item.emoji if item else '' }}"
+                    class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+            </div>
+            <div class="space-y-2">
+                <label for="slug" class="text-sm font-medium">Slug (optionnel)</label>
+                <input type="text" id="slug" name="slug" placeholder="/ma-page" value="{{ item.slug if item else '' }}"
+                    class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+            </div>
         </div>
 
-        <div class="flex items-center gap-2">
-            <input type="checkbox" id="is_active" name="is_active" value="True" {{ 'checked' if not item or
-                item.is_active }} class="rounded border-input text-primary">
-            <label for="is_active" class="text-sm font-medium">Actif</label>
+        <div class="space-y-4 pt-2">
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="is_active" name="is_active" value="True" {{ 'checked' if not item or
+                    item.is_active }} class="rounded border-input text-primary">
+                <label for="is_active" class="text-sm font-medium">Actif (affiché dans le menu)</label>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="open_in_new_tab" name="open_in_new_tab" value="True" {{ 'checked' if item and
+                    item.open_in_new_tab }} class="rounded border-input text-primary">
+                <label for="open_in_new_tab" class="text-sm font-medium">Ouvrir dans un nouvel onglet</label>
+            </div>
         </div>
 
         <div class="pt-4 flex gap-4">

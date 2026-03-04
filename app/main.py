@@ -3,14 +3,15 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from .database import create_db_and_tables, get_session
-from .models import SiteConfig, MenuItem
-from .routers import admin
+from .models import SiteConfig, MenuItem, User
+from .routers import admin, auth
 from typing import List
 from datetime import datetime
 
 app = FastAPI(title="Notion Site Builder")
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(admin.router)
 
 # Mount static files
@@ -24,6 +25,24 @@ else:
 # Templates
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals.update(now=datetime.now)
+
+from .auth import get_current_user
+
+@app.middleware("http")
+async def add_current_user_to_request(request: Request, call_next):
+    # This makes 'user' available in all templates via the request
+    db = next(get_session())
+    user = await get_current_user(request, db)
+    request.state.user = user
+    response = await call_next(request)
+    return response
+
+# Also add a context processor for templates
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    # Use a separate middleware for user to avoid dependency issues if needed,
+    # but request.state is the standard way.
+    return await call_next(request)
 
 @app.on_event("startup")
 def on_startup():
