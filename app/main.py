@@ -14,7 +14,12 @@ app = FastAPI(title="Notion Site Builder")
 app.include_router(admin.router)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+import os
+static_dir = "app/static"
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+else:
+    print(f"Warning: Static directory '{static_dir}' not found. Skipping mount.")
 
 # Templates
 templates = Jinja2Templates(directory="app/templates")

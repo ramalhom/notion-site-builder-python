@@ -204,7 +204,45 @@ heroku container:push web -a votre-app-name
 heroku container:release web -a votre-app-name
 ```
 
+### Virtuozzo Application Platform (Jelastic)
+
+Virtuozzo (anciennement Jelastic) permet de déployer via Docker ou directement via Git.
+
+#### Option A : Déploiement via Docker (Recommandé)
+
+1. **Créer l'environnement** :
+   - Cliquez sur **Nouveau Environnement**.
+   - Allez dans l'onglet **Docker**.
+   - Cliquez sur **Sélectionner une image** et cherchez `votre-username/notion-site-builder:latest` (ou utilisez une image publique).
+2. **Configurer les variables d'environnement** :
+   - Dans les paramètres du nœud Docker, allez dans **Variables d'environnement**.
+   - Ajoutez :
+     - `VITE_SUPABASE_URL`
+     - `VITE_SUPABASE_PUBLISHABLE_KEY`
+     - `VITE_SUPABASE_PROJECT_ID`
+3. **Port** : L'application écoute sur le port `80`. Virtuozzo gère automatiquement le routing.
+4. **CMD / Entry Point** (si demandé) :
+   - **Point d'entrée** : (Laissez vide)
+   - **Exécuter la commande** : `python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`
+
+#### Option B : Déploiement via Git
+
+1. **Créer l'environnement** :
+   - Choisissez un nœud **Python 3.11**.
+2. **Ajouter le projet** :
+   - Cliquez sur **Déployer à partir de Git/SVN**.
+   - Renseignez l'URL de votre dépôt.
+3. **Configuration** :
+   - Jelastic utilisera le `requirements.txt` pour installer les dépendances.
+   - Configurez les variables d'environnement dans les paramètres du nœud.
+3. **Configuration** :
+   - Jelastic utilisera le `requirements.txt` pour installer les dépendances.
+   - Configurez les variables d'environnement dans les paramètres du nœud.
+   - **Point d'entrée** : (Laissez vide)
+   - **Exécuter la commande** : `python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`
+
 ---
+
 
 ## 🔄 Mise à jour de l'application
 
@@ -364,19 +402,45 @@ docker inspect notion-app
 docker inspect --format='{{.State.Health.Status}}' notion-app
 ```
 
-### Problème de connexion à Supabase
+  - Point d'entrée : `python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80`.
 
-Vérifiez que les variables d'environnement ont bien été injectées lors du build :
+### `uvicorn: command not found` sur Jelastic
 
-```bash
-# Reconstruire l'image avec les bonnes variables
-source .env
-docker build \
-  --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
-  --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="$VITE_SUPABASE_PUBLISHABLE_KEY" \
-  --build-arg VITE_SUPABASE_PROJECT_ID="$VITE_SUPABASE_PROJECT_ID" \
-  -t notion-site-builder:latest .
-```
+Si vous obtenez cette erreur dans les logs Jelastic lors du déploiement via Git :
+
+1. **Utilisez le module python** : Remplacez `uvicorn` par `python3 -m uvicorn` dans votre commande de démarrage. Cela garantit que le binaire est cherché dans le bon environnement Python.
+2. **Vérifiez l'installation** : Connectez-vous en SSH à votre instance et vérifiez si les dépendances sont installées :
+   ```bash
+   pip3 list | grep uvicorn
+   ```
+3. **Forcer l'installation** : Si uvicorn n'est pas présent, lancez manuellement l'installation depuis la racine de votre projet :
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+4. **Vérifiez le dossier de travail** : Assurez-vous que la commande est lancée depuis `/var/www/webroot/ROOT` (ou le dossier où se trouve votre code).
+5. **Dossiers manquants (Erreur StaticFiles)** : Si vous avez une erreur `RuntimeError: Directory 'app/static' does not exist`, c'est parce que Git n'envoie pas les dossiers vides. Créez-le manuellement en SSH :
+   ```bash
+   mkdir -p /var/www/webroot/ROOT/app/static
+   ```
+
+### Déboguer le démarrage sur Jelastic
+
+Si vous voyez uniquement des logs comme `Stopping httpd` / `Starting httpd` :
+
+Les logs que vous regardez sont probablement les **logs système (syslog)** qui indiquent simplement que le service Apache de Jelastic a redémarré. Pour voir les erreurs de votre commande Uvicorn :
+
+1. **Cherchez le fichier `run.log`** : 
+   - Dans le tableau de bord Jelastic, allez dans l'onglet **Logs**.
+   - Cherchez un fichier nommé `run.log`, `node.log` ou `stdout`. C'est là que Uvicorn écrit ses erreurs.
+2. **Tester manuellement via SSH (Recommandé)** :
+   - Connectez-vous en SSH à votre nœud.
+   - Allez dans le répertoire racine : `cd /var/www/webroot/ROOT`.
+   - Lancez la commande manuellement pour voir l'erreur en direct :
+     ```bash
+     python3 -m uvicorn app.main:app --host 0.0.0.0 --port 80
+     ```
+   - Si une dépendance manque ou s'il y a une erreur de syntaxe, elle s'affichera immédiatement ici.
+3. **Le port 80** : Sur un nœud natif Jelastic, le port 80 est souvent déjà pris par Apache. Si vous voulez utiliser Uvicorn, vous devrez peut-être utiliser un autre port interne (ex: 8080) ou passer sur un environnement **Docker** (Option A) qui est plus adapté pour FastAPI.
 
 ---
 
