@@ -1,73 +1,52 @@
-# Welcome to your Lovable project
+# 🚀 Notion Site Builder (Python)
 
-## Project info
+Transformez vos pages Notion en un site web élégant et performant avec une interface d'administration complète.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🌟 Qu'est-ce que c'est ?
 
-## How can I edit this code?
+Notion Site Builder est une application full-stack (FastAPI + React) qui permet de :
+- **Publier vos pages Notion** sous forme de site web avec votre propre domaine.
+- **Gérer un menu de navigation** personnalisé (ordonnancement, emojis, liens externes).
+- **Personnaliser l'apparence** (nom du site, logo via emoji ou URL).
+- **Interface Admin** : Un tableau de bord sécurisé pour tout configurer sans toucher au code.
 
-There are several ways of editing your application.
+## ✨ Fonctionnalités Clés
 
-**Use Lovable**
+- 🔐 **Sécurité** : Authentification Robuste avec JWT et hachage BCrypt.
+- 📁 **Menu Dynamique** : Créez des menus multiniveaux, gérez l'ordre et l'affichage.
+- 🎨 **Logo Flexible** : Utilisez un emoji ou une image via URL pour votre identité visuelle.
+- 🚀 **Déploiement Docker** : Image optimisée (< 50Mo) et prête pour la production.
+- 🛡️ **SSL Automatique** : Intégration Caddy pour des certificats Let's Encrypt sans effort.
+- 💾 **Persistance** : Base de données SQLite persistante via volumes Docker.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 📦 Déploiement Rapide
 
-Changes made via Lovable will be committed automatically to this repo.
+Le déploiement est optimisé pour utiliser **Docker Hub** et **Caddy**.
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### 1. Préparation
+Assurez-vous d'avoir un fichier `.env` avec votre configuration domaine :
+```env
+DOMAIN=votre-domaine.ch
+ACME_EMAIL=admin@votre-domaine.ch
 ```
 
-**Edit a file directly in GitHub**
+### 2. Lancement
+Utilisez Docker Compose pour lancer la stack complète avec SSL automatique :
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 3. Premier accès
+Rendez-vous sur `https://votre-domaine.ch/setup` pour créer votre compte administrateur.
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📖 Documentation Complète
 
-## What technologies are used for this project?
+Pour plus de détails techniques et les instructions étape par étape :
+- [**Guide de Déploiement détaillé**](./DEPLOYMENT.md) : Build AMD64, publication Docker Hub, et dépannage.
+- [**Documentation Docker**](./DOCKER.md) : Structure technique des containers.
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+*Développé avec ❤️ pour simplifier la publication de contenu Notion.*

@@ -2,6 +2,6 @@
     email {$ACME_EMAIL}
 }
 
-{$DOMAIN} {
+{$DOMAIN}, www.{$DOMAIN} {
     reverse_proxy app:80
 }
